@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+</head>
+<body>
+    <script>
+          var width = 1200; // グラフの幅
+  var height = 800; // グラフの高さ
+  var n = 24;
+ 
+  var matrix = new Array(n);
+  for(var i = 0; i < n; i++) {
+    matrix[i] = new Array(n);
+    for(var j = 0; j < n; j++) {
+      matrix[i][j] = Math.random();
+    }
+  }
+
+        //svg領域 
+        var svg = d3.select("body").append("svg").attr("width", width).attr("height", height);
+  g = svg.append("g").attr("transform", "translate(" + 0 + "," + 0 + ")");
+
+        //scale rangeとdomainも同時に設定
+
+        var scale = d3.scaleBand().rangeRound([0, d3.min([width, height])]).domain(d3.range(n));
+
+        var color = d3.scaleSequential(
+      function(t) { return d3.interpolate("white", "steelblue")(t); }
+    )
+    .domain([0, d3.max(matrix, function(row) { return d3.max(row) })]);
+ 
+        //heatmap
+
+          g.selectAll(".row")
+            .data(matrix)
+            .enter()
+            .append("g")
+            .attr("class", "row")
+            .attr("transform", function(d, i) { return "translate(0," + scale(i) + ")"; })
+            .selectAll(".cell")
+            .data(function(d) { return d })
+            .enter()
+            .append("rect")
+            .attr("class", "cell")
+            .attr("x", function(d, i) { return scale(i); })
+            .attr("width", scale.bandwidth())
+            .attr("height", scale.bandwidth())
+            .attr("opacity", 0.9)
+            .attr("fill", function(d) { return color(d); });
+    </script>
+</body>
+</html>
