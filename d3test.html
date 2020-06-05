@@ -6,55 +6,126 @@
     <script src="https://d3js.org/d3.v5.min.js"></script>
   </head>
   <body>
+      <div id="my_dataviz"></div>
     <script>
-      var dataset = [ 
-          [5, 20], 
-          [480, 90], 
-          [250, 50],
-          [100, 33], 
-          [330, 95],
-          [410, 12],
-          [475, 44], 
-          [25, 67], 
-          [85, 21], 
-          [220, 88] 
-          ];
+     // set the dimensions and margins of the graph
+var margin = {top: 30, right: 0, bottom: 30, left: 30},
+    width = 640 - margin.left - margin.right,
+    height = 320 - margin.top - margin.bottom;
 
-    var width = 400;
-    var height = 300;
+// append the svg object to the body of the page
+var svg = d3.select("#my_dataviz")
+.append("svg")
+  .attr("width", width + margin.left + margin.right)
+  .attr("height", height + margin.top + margin.bottom)
+.append("g")
+  .attr("transform",
+        "translate(" + margin.left + "," + margin.top + ")");
 
-    var svg = d3.select("body").append("svg").attr("width" ,width).attr("height" , height);
-    var padding = 30;
+// Labels of row and columns
+//var hours = ["0am", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am", "11am", "12pm", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm"]
+//var myVars = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
+
+var myGroups =["A","B","C","D","E","F","G","H","I","J"];
+var myVars = ["v1","v2","v3","v4","v5","v6","v7","v8","v9","v10"];
+
+// Build X scales and axis:
+var x = d3.scaleBand()
+  .range([ 0, width ])
+  .domain(myGroups)
+  .padding(0.01);
+
+
+var xAxis = svg.append("g")
+  .attr("transform", "translate(" + 0 + ", "+ 0 + ")")
+  .call(d3.axisTop(x)
+  .tickValues( x.domain().filter(function(d,i){ return !(i % 2); }) )
+  );
+
+
+
+// Build Y scales and axis:
+var y = d3.scaleBand()
+  .range([ height, 0 ])
+  .domain(myVars)
+  .padding(0.01);
+
+var yAxis = svg.append("g")
+    .call(d3.axisLeft(y));
+
+  
+
+
+
+
+//hover tooltip
+
+  var tooltip = d3.select("body")
+    .append("div")
+    .style("opacity", 0)
+    .attr("class", "tooltip")
+    .style("position", "absolute")
+    .style("text-align", "center")
+    .style("width","auto")
+    .style("height","auto")
+    .style("padding", "5px")
+    .style("font", "12px")
+    .style("color","white")
+    .style("font-family","Hiragino Kaku Gothic ProN")
+    .style("background-color", "rgba(0,0,0,0.88)")
+    .style("border-radius","5px 5px 5px 5px")
+    .style("visibility", "hidden;")
+
+    /*
+
+    .style("-webkit-box-shadow","0 3px 0 0 rgba(34, 34, 34, 0.8)")
+    .style("-moz-box-shadow","0 3px 0 0 rgba(34, 34, 34, 0.8)")
+    .style("box-shadow", "0 3px 0 0 rgba(34, 34, 34, 0.8)")
+
+    */
     
-    //スケール定義 
 
-    var xScale = d3.scaleLinear()
-            .domain([0, d3.max(dataset,function(d){return d[0];})])
-            .range([padding,width - padding]);
+//mouse
 
-    var yScale = d3.scaleLinear()
-            .domain([0,d3.max(dataset, function(d){return d[1];})])
-            .range([height - padding ,padding]);
+  var mouseover = function(d) {
+    tooltip.style("opacity", 1)
+  }
+  var mousemove = function(d) {
+    tooltip
+      .html("チャット数: " + d.value)
+      .style("left", (d3.mouse(this)[0]+70) + "px")
+      .style("top", (d3.mouse(this)[1]) + "px")
+  }
+  var mouseleave = function(d) {
+    tooltip.style("opacity", 0)
+  }
 
-    var axisX = d3.axisBottom(xScale);
-    var axisY = d3.axisLeft(yScale);
+//Read the data
 
-        svg.append("g")
-            .attr("transform","translate(" + 0 +","+ (height-padding) +")")
-            .call(axisX);
-    
-        svg.append("g")
-            .attr("transform","translate("+ padding +","+ 0 +" ) ")
-            .call(axisY);
-    
-    svg.selectAll("circle")
-            .data(dataset)
-            .enter()
-            .append("circle")
-            .attr("cx", function(d) { return xScale(d[0]); })
-            .attr("cy", function(d) { return yScale(d[1]); })
-            .attr("r", 4);
+//var DATA_FILE_PATH = '';
+d3.csv('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/heatmap_data.csv').then(function(data) {
+
+// Build color scale
+var myColor = d3.scaleLinear()
+  .range(["#f5f7ff", "#2F5EC4"])
+  .domain([0,d3.max(data, function(d){ return d.value})])
+console.log(x);
+  svg.selectAll()
+      .data(data, function(d) {return d.group+':'+d.variable;})
+      .enter()
+      .append("rect")
+      .attr("x", function(d) { return x(d.group) })
+      .attr("y", function(d) { return y(d.variable) })
+      .attr("width", x.bandwidth() )
+      .attr("height", y.bandwidth() )
+      .style("fill", function(d) { return myColor(d.value)} )
+      .on("mouseover", mouseover)
+      .on("mousemove", mousemove)
+      .on("mouseleave", mouseleave)
+
+});
+
 
     </script>
   </body>
